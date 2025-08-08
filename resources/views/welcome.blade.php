@@ -49,7 +49,7 @@
                 </nav>
             @endif
         </header>
-        <p>Hello Ini Kelom ke 3</p>
+        <p>Hello Ini Kelompok ke 3 yaaaaaaa</p>
 
         @if (Route::has('login'))
             <div class="h-14.5 hidden lg:block"></div>
