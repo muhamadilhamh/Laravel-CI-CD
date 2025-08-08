@@ -16,6 +16,13 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/muhamadilhamh/Laravel-CI-CD.git'
             }
         }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'composer install --no-dev --optimize-autoloader'
+                sh 'npm install' // If you use Node.js dependencies for frontend assets
+            }
+        }
         
         stage ('Build & Package') {
             steps {
