@@ -17,17 +17,17 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'composer install --no-dev --optimize-autoloader'
-                sh 'npm install' // If you use Node.js dependencies for frontend assets
-            }
-        }
+        // stage('Install Dependencies') {
+        //     steps {
+        //         sh 'composer install --no-dev --optimize-autoloader'
+        //         sh 'npm install' // If you use Node.js dependencies for frontend assets
+        //     }
+        // }
         
-        stage ('Build & Package') {
-            steps {
-                sh 'php artisan test'
-            }
+        // stage ('Build & Package') {
+        //     steps {
+        //         sh 'php artisan test'
+        //     }
             
             // post {
             //     success {
