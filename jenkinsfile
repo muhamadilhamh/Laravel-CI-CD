@@ -35,7 +35,12 @@ pipeline {
         //     //     }
         //     // }
         // }
-        
+        stage('Check Docker') {
+            steps {
+                sh 'which docker || echo "❌ Docker tidak ditemukan"'
+                sh 'docker --version || echo "❌ Docker belum terinstall"'
+            }
+        }
         stage ('Build Docker Image') {
             agent { label 'docker-enabled-node' }
             steps {
