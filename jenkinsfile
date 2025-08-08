@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "royalnavy/laravel-image:2.9"
+        DOCKER_USERNAME = "royalnavy"
+        DOCKER_PASSWORD = "32dbb5a3A" 
+        FILE_NAME = "laravel"
+    }
+    
+    stages {
+        
+        stage ('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/muhamadilhamh/Laravel-CI-CD.git'
+            }
+        }
+        
+        stage ('Build & Package') {
+            steps {
+                sh 'php artisan test'
+            }
+            
+            // post {
+            //     success {
+            //         archiveArtifacts artifacts: "${PROJECT_DIR}/target/*.jar", fingerprint: true
+            //     }
+            // }
+        }
+        
+        stage ('Build Docker Image') {
+            steps {
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+        
+      stage('push docker image'){
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: "${DOCKER_PASSWORD}", usernameVariable: "${DOCKER_USERNAME}")]) {
+                        // Perintah docker login menggunakan variabel dari kredensial
+                        sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                        // Kemudian push image
+                        sh "docker push ${DOCKER_IMAGE}"
+                        // Opsional: Logout setelah push selesai untuk keamanan
+                        sh "docker logout"
+                    }
+                }
+            }
+        }
+        
+        stage ('Deploy via OpenShift') {
+            steps {
+                echo 'Deploying application on target server via OpenShift...'
+                sh "oc apply -f ${FILE_NAME}.yml"
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Application deployed successfully! ✅'
+        }
+        failure {
+            echo 'Deployment failed. Please check the logs. ❌'
+        }
+    }
+}
