@@ -1,15 +1,12 @@
 pipeline {
     agent any
-    tools {
-        dockerTool 'Docker'   // Nama harus sama seperti di global config
-    }
 //testing aja
 //testing baru
     environment {
-        DOCKER_IMAGE = "royalnavy/laravel-image:2.9"
-        DOCKER_USERNAME = "cfab7228-2a4c-4e1b-89ee-1a741b6c7436"
-        DOCKER_PASSWORD = "c6a34f5b-4866-4adb-aac6-7ca18c52ff71" 
+        DOCKER_IMAGE = "royalnavy/laravel-image:2.9" 
         FILE_NAME = "laravel"
+        docker-hub = "b2ff3deb-afa2-4d83-9867-cd72fdee776d"
+        OC_TOKEN = "8c766c2b-dc0d-47e9-900e-fa41c6d57792"
     }
     
     stages {
@@ -20,30 +17,6 @@ pipeline {
             }
         }
 
-        // stage('Install Dependencies') {
-        //     steps {
-        //         sh 'composer install --no-dev --optimize-autoloader'
-        //         sh 'npm install' // If you use Node.js dependencies for frontend assets
-        //     }
-        // }
-        
-        // stage ('Build & Package') {
-        //     steps {
-        //         sh 'php artisan test'
-        //     }
-            
-        //     // post {
-        //     //     success {
-        //     //         archiveArtifacts artifacts: "${PROJECT_DIR}/target/*.jar", fingerprint: true
-        //     //     }
-        //     // }
-        // }
-        stage('Check Docker') {
-            steps {
-                sh 'which docker || echo "❌ Docker tidak ditemukan"'
-                sh 'docker --version || echo "❌ Docker belum terinstall"'
-            }
-        }
         stage ('Build Docker Image') {
             steps {
                 sh "docker build -t ${DOCKER_IMAGE} ."
@@ -53,9 +26,9 @@ pipeline {
       stage('push docker image'){
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', passwordVariable: "${DOCKER_PASSWORD}", usernameVariable: "${DOCKER_USERNAME}")]) {
+                    withCredentials([usernamePassword(credentialsId: "${docker-hub}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         // Perintah docker login menggunakan variabel dari kredensial
-                        sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                        sh "docker login -u "$DOCKER_USER" -p "$DOCKER_PASS""
                         // Kemudian push image
                         sh "docker push ${DOCKER_IMAGE}"
                         // Opsional: Logout setelah push selesai untuk keamanan
@@ -67,7 +40,9 @@ pipeline {
         
         stage ('Deploy via OpenShift') {
             steps {
+                withCredentials([string(credentialsId:${OC_TOKEN} , variable: 'token')])
                 echo 'Deploying application on target server via OpenShift...'
+                sh "oc login --token="$token" --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
                 sh "oc apply -f ${FILE_NAME}.yml"
             }
         }
