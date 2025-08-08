@@ -7,7 +7,7 @@ pipeline {
 //testing baru
     environment {
         DOCKER_IMAGE = "royalnavy/laravel-image:2.9"
-        DOCKER_USERNAME = "royalnavy"
+        DOCKER_USERNAME = "cfab7228-2a4c-4e1b-89ee-1a741b6c7436"
         DOCKER_PASSWORD = "c6a34f5b-4866-4adb-aac6-7ca18c52ff71" 
         FILE_NAME = "laravel"
     }
@@ -53,7 +53,7 @@ pipeline {
       stage('push docker image'){
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: "${DOCKER_PASSWORD}", usernameVariable: "${DOCKER_USERNAME}")]) {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', passwordVariable: "${DOCKER_PASSWORD}", usernameVariable: "${DOCKER_USERNAME}")]) {
                         // Perintah docker login menggunakan variabel dari kredensial
                         sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
                         // Kemudian push image
