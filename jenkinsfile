@@ -1,11 +1,14 @@
 pipeline {
     agent any
+    tools {
+        dockerTool 'Docker'   // Nama harus sama seperti di global config
+    }
 //testing aja
 //testing baru
     environment {
         DOCKER_IMAGE = "royalnavy/laravel-image:2.9"
         DOCKER_USERNAME = "royalnavy"
-        DOCKER_PASSWORD = "32dbb5a3A" 
+        DOCKER_PASSWORD = "c6a34f5b-4866-4adb-aac6-7ca18c52ff71" 
         FILE_NAME = "laravel"
     }
     
