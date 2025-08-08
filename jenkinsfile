@@ -1,6 +1,7 @@
 pipeline {
     agent any
 //testing aja
+//testing baru
     environment {
         DOCKER_IMAGE = "royalnavy/laravel-image:2.9"
         DOCKER_USERNAME = "royalnavy"
