@@ -47,8 +47,8 @@ pipeline {
                     sh "oc login --token=sha256~KTzchPQ24xa70qa2w3IOUDp5wJnMvWYolmDGp572W5g --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
                     sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml"
                     sh "oc project royalnavy-dev"
-                    sh "oc get route"
                     sh "oc apply -f ${FILE_NAME}.yml"
+                    sh "oc get route"
                 }
             }
         }
