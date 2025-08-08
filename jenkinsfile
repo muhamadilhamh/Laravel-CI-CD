@@ -29,12 +29,12 @@ pipeline {
         //         sh 'php artisan test'
         //     }
             
-            // post {
-            //     success {
-            //         archiveArtifacts artifacts: "${PROJECT_DIR}/target/*.jar", fingerprint: true
-            //     }
-            // }
-        }
+        //     // post {
+        //     //     success {
+        //     //         archiveArtifacts artifacts: "${PROJECT_DIR}/target/*.jar", fingerprint: true
+        //     //     }
+        //     // }
+        // }
         
         stage ('Build Docker Image') {
             steps {
