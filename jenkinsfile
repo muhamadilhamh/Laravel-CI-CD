@@ -42,7 +42,6 @@ pipeline {
             }
         }
         stage ('Build Docker Image') {
-            agent { label 'docker-enabled-node' }
             steps {
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
