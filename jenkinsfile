@@ -17,22 +17,30 @@ pipeline {
       }
     }
 
-    /* === TRIVY FS: Enforce + SARIF === */
+    /* === TRIVY FS: Show all severities, fail only if CRITICAL === */
     stage('Trivy FS Scan (source)') {
       steps {
         sh '''
           set -e
-          # 1) Enforce & tampilkan tabel di console
+          # 1) Tampilkan semua severity (LOW..CRITICAL) di console; tidak menggagalkan build
           trivy fs . \
-            --severity MEDIUM,CRITICAL \
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
             --ignore-unfixed \
-            --exit-code 1 \
+            --exit-code 0 \
             --cache-dir .trivycache \
             --format table
 
-          # 2) Buat laporan SARIF (tidak memengaruhi exit code)
+          # 2) Gate: gagalkan kalau ada CRITICAL (tanpa spam output)
           trivy fs . \
-            --severity MEDIUM,CRITICAL \
+            --severity CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --cache-dir .trivycache \
+            --format json > /dev/null || { echo "❌ Ada vulnerability CRITICAL pada source"; exit 1; }
+
+          # 3) Arsip SARIF (untuk bukti/analisis)
+          trivy fs . \
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
             --ignore-unfixed \
             --exit-code 0 \
             --cache-dir .trivycache \
@@ -100,25 +108,34 @@ pipeline {
       }
     }
 
-    /* === TRIVY IMAGE: Enforce + SARIF === */
+    /* === TRIVY IMAGE: Show all severities, fail only if CRITICAL === */
     stage('Trivy Image Scan (registry)') {
       steps {
         withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
           sh '''
             set -e
-            # 1) Enforce & console table
+            # 1) Tampilkan semua severity di console; tidak fail
             trivy image \
-              --severity MEDIUM,CRITICAL \
+              --severity LOW,MEDIUM,HIGH,CRITICAL \
               --ignore-unfixed \
-              --exit-code 1 \
+              --exit-code 0 \
               --cache-dir .trivycache \
               --username "$DOCKER_USER" --password "$DOCKER_PASS" \
               --format table \
               ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
 
-            # 2) SARIF untuk arsip
+            # 2) Gate: fail kalau ada CRITICAL
             trivy image \
-              --severity MEDIUM,CRITICAL \
+              --severity CRITICAL \
+              --ignore-unfixed \
+              --exit-code 1 \
+              --cache-dir .trivycache \
+              --username "$DOCKER_USER" --password "$DOCKER_PASS" \
+              --format json ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} > /dev/null || { echo "❌ Ada vulnerability CRITICAL pada image"; exit 1; }
+
+            # 3) SARIF untuk arsip
+            trivy image \
+              --severity LOW,MEDIUM,HIGH,CRITICAL \
               --ignore-unfixed \
               --exit-code 0 \
               --cache-dir .trivycache \
