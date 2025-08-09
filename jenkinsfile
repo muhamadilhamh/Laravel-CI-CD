@@ -18,36 +18,41 @@ pipeline {
     }
 
     /* === TRIVY FS: Show all severities, fail only if CRITICAL === */
-    stage('Trivy FS Scan (source)') {
-      steps {
-        sh '''
-          set -e
-          # 1) Tampilkan semua severity (LOW..CRITICAL) di console; tidak menggagalkan build
-          trivy fs . \
+     stage('Trivy FS Scan (source)') {
+        steps {
+            sh '''
+            set -e
+
+            # 1) Human readable (semua severity), tidak fail
+            trivy fs . \
             --severity LOW,MEDIUM,HIGH,CRITICAL \
             --ignore-unfixed \
             --exit-code 0 \
-            --cache-dir .trivycache \
+            --cache-dir "$TRIVY_CACHE" \
             --format table
 
-          # 2) Gate: gagalkan kalau ada CRITICAL (tanpa spam output)
-          trivy fs . \
-            --severity CRITICAL \
-            --ignore-unfixed \
-            --exit-code 1 \
-            --cache-dir .trivycache \
-            --format json > /dev/null || { echo "❌ Ada vulnerability CRITICAL pada source"; exit 1; }
+            # 2) Output untuk parsing & arsip
+            trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format json  > trivy-fs.json
+            trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format sarif --output trivy-fs.sarif
 
-          # 3) Arsip SARIF (untuk bukti/analisis)
-          trivy fs . \
-            --severity LOW,MEDIUM,HIGH,CRITICAL \
-            --ignore-unfixed \
-            --exit-code 0 \
-            --cache-dir .trivycache \
-            --format sarif --output trivy-fs.sarif
-        '''
-      }
-      post { always { archiveArtifacts artifacts: 'trivy-fs.sarif', allowEmptyArchive: true } }
+            # 3) Summary count
+            LOW=$(grep -o '"Severity":"LOW"'       trivy-fs.json | wc -l || true)
+            MED=$(grep -o '"Severity":"MEDIUM"'    trivy-fs.json | wc -l || true)
+            HIGH=$(grep -o '"Severity":"HIGH"'     trivy-fs.json | wc -l || true)
+            CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-fs.json | wc -l || true)
+
+            echo "---- Trivy FS Summary ----"
+            echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
+
+            # 4) Gate: fail hanya jika CRITICAL; HIGH cuma warning
+            if [ "$CRIT" -gt 0 ]; then
+            echo "❌ Found CRITICAL vulns in source: $CRIT"; exit 1
+            elif [ "$HIGH" -gt 0 ]; then
+            echo "⚠️  Found HIGH vulns in source: $HIGH (not failing build)"
+            fi
+            '''
+        }
+      post { always { archiveArtifacts artifacts: 'trivy-fs.*', allowEmptyArchive: true } }
     }
 
     stage('PHPUnit & Coverage') {
@@ -114,34 +119,35 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
           sh '''
             set -e
-            # 1) Tampilkan semua severity di console; tidak fail
+            # 1) Tampilkan semua severity; tidak fail
             trivy image \
-              --severity LOW,MEDIUM,HIGH,CRITICAL \
-              --ignore-unfixed \
-              --exit-code 0 \
-              --cache-dir .trivycache \
-              --username "$DOCKER_USER" --password "$DOCKER_PASS" \
-              --format table \
-              ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 0 \
+            --cache-dir "$TRIVY_CACHE" \
+            --username "$DOCKER_USER" --password "$DOCKER_PASS" \
+            --format table \
+            ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
 
-            # 2) Gate: fail kalau ada CRITICAL
-            trivy image \
-              --severity CRITICAL \
-              --ignore-unfixed \
-              --exit-code 1 \
-              --cache-dir .trivycache \
-              --username "$DOCKER_USER" --password "$DOCKER_PASS" \
-              --format json ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} > /dev/null || { echo "❌ Ada vulnerability CRITICAL pada image"; exit 1; }
+            # 2) JSON + SARIF untuk arsip/parse
+            trivy image --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --username "$DOCKER_USER" --password "$DOCKER_PASS" --format json  ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} > trivy-image.json
+            trivy image --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --username "$DOCKER_USER" --password "$DOCKER_PASS" --format sarif --output trivy-image.sarif ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
 
-            # 3) SARIF untuk arsip
-            trivy image \
-              --severity LOW,MEDIUM,HIGH,CRITICAL \
-              --ignore-unfixed \
-              --exit-code 0 \
-              --cache-dir .trivycache \
-              --username "$DOCKER_USER" --password "$DOCKER_PASS" \
-              --format sarif --output trivy-image.sarif \
-              ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+            # 3) Summary count
+            LOW=$(grep -o '"Severity":"LOW"'       trivy-image.json | wc -l || true)
+            MED=$(grep -o '"Severity":"MEDIUM"'    trivy-image.json | wc -l || true)
+            HIGH=$(grep -o '"Severity":"HIGH"'     trivy-image.json | wc -l || true)
+            CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-image.json | wc -l || true)
+
+            echo "---- Trivy Image Summary ----"
+            echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
+
+            # 4) Gate: fail hanya jika CRITICAL
+            if [ "$CRIT" -gt 0 ]; then
+            echo "❌ Found CRITICAL vulns in image: $CRIT"; exit 1
+            elif [ "$HIGH" -gt 0 ]; then
+            echo "⚠️  Found HIGH vulns in image: $HIGH (not failing build)"
+            fi
           '''
         }
       }
