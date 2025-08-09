@@ -6,7 +6,7 @@ pipeline {
         DOCKER_IMAGE_TAG = "v${BUILD_NUMBER}"
         FILE_NAME = "laravel"
         DOCKER_HUB = "b2ff3deb-afa2-4d83-9867-cd72fdee776d"
-        OC_TOKEN = "8c766c2b-dc0d-47e9-900e-fa41c6d57792"
+        OC_TOKEN = "baba7fa1-f682-4c2e-ba9b-070e1edc5e34"
     }
     
     stages {
