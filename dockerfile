@@ -23,7 +23,7 @@ RUN chgrp -R 0 /var/www/html/storage /var/www/html/bootstrap/cache && \
 # Install dependencies Laravel (jika vendor belum ada)
 RUN cd /var/www/html && \
     if [ ! -d "vendor" ]; then composer install; fi && \
-    if [ ! -f ".env" ]; then cp .env.example .env; fi && \
+    if [ ! -f ".env" ]; then cp .env; fi && \
     php artisan key:generate
 
 # Jalankan perintah untuk membuat symbolic link
