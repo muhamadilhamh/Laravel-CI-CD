@@ -24,7 +24,7 @@ pipeline {
           set -e
           # 1) Enforce & tampilkan tabel di console
           trivy fs . \
-            --severity CRITICAL,HIGH \
+            --severity MEDIUM,CRITICAL \
             --ignore-unfixed \
             --exit-code 1 \
             --cache-dir .trivycache \
@@ -32,7 +32,7 @@ pipeline {
 
           # 2) Buat laporan SARIF (tidak memengaruhi exit code)
           trivy fs . \
-            --severity CRITICAL,HIGH \
+            --severity MEDIUM,CRITICAL \
             --ignore-unfixed \
             --exit-code 0 \
             --cache-dir .trivycache \
@@ -108,7 +108,7 @@ pipeline {
             set -e
             # 1) Enforce & console table
             trivy image \
-              --severity CRITICAL,HIGH \
+              --severity MEDIUM,CRITICAL \
               --ignore-unfixed \
               --exit-code 1 \
               --cache-dir .trivycache \
@@ -118,7 +118,7 @@ pipeline {
 
             # 2) SARIF untuk arsip
             trivy image \
-              --severity CRITICAL,HIGH \
+              --severity MEDIUM,CRITICAL \
               --ignore-unfixed \
               --exit-code 0 \
               --cache-dir .trivycache \
