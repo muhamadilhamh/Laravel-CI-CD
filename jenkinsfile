@@ -17,6 +17,33 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                      sonar-scanner \
+                        -Dsonar.projectKey=laravel-app-ci-cd \
+                        -Dsonar.sources=. \
+                        -Dsonar.php.file.suffixes=.php \
+                        -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Pipeline failed because Quality Gate was ${qg.status}"
+                        }
+                    }
+                }
+            }
+        }
+
         stage ('Build Docker Image') {
             steps {
                 sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ."
