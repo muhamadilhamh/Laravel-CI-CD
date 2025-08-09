@@ -22,24 +22,15 @@ pipeline {
             steps {
                 sh '''
                 set -e
-                # Jalankan PHPUnit. Prioritas pakai phpdbg untuk coverage.
-                if command -v phpdbg >/dev/null 2>&1; then
-                    phpdbg -qrr vendor/bin/phpunit --coverage-clover coverage.xml
-                else
-                    echo "phpdbg tidak ada; jalankan phpunit tanpa coverage."
-                    php vendor/bin/phpunit || true
-                    # Buat dummy coverage agar step archive & sonar tidak error
-                    echo '<coverage generated="0"></coverage>' > coverage.xml
-                fi
-
-                # Pastikan file coverage ada
-                [ -f coverage.xml ] || echo '<coverage generated="0"></coverage>' > coverage.xml
+                # aktifkan coverage via Xdebug hanya untuk proses ini
+                php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-clover coverage.xml || true
                 '''
             }
             post {
                 always { archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true }
             }
         }
+
 
         stage('SonarQube Analysis') {
                 steps {
