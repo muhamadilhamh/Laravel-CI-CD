@@ -148,20 +148,19 @@ pipeline {
       post { always { archiveArtifacts artifacts: 'trivy-image.sarif', allowEmptyArchive: true } }
     }
 
-    stage ('Deploy via OpenShift') {
-      steps {
-        withCredentials([string(credentialsId:"${OC_TOKEN}" , variable: 'TOKEN')]){
-          sh """
-            set -euo pipefail
-            oc login --token="$TOKEN" --server=https://api.rm1.0a51.p1.openshiftapps.com:6443
-            sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml
-            oc project royalnavy-dev
-            oc apply -f ${FILE_NAME}.yml
-            oc get route
-          """
-        }
-      }
-    }
+        stage ('Deploy via OpenShift') {
+                steps {
+                    withCredentials([string(credentialsId:"${OC_TOKEN}" , variable: 'TOKEN')]){
+                        echo 'Deploying application on target server via OpenShift...'
+                        // sh "oc login --token=$TOKEN --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
+                        sh "oc login --token=sha256~JlUY1K0T1KgSXYwAGcTzVpGqX_9L0cEI0LNvDoS6fQ0 --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
+                        sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml"
+                        sh "oc project royalnavy-dev"
+                        sh "oc apply -f ${FILE_NAME}.yml"
+                        sh "oc get route"
+                    }
+                }
+            }
   }
 
   post {
