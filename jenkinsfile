@@ -20,10 +20,20 @@ pipeline {
         stage('PHPUnit & Coverage') {
             when { expression { fileExists('vendor/bin/phpunit') } }
             steps {
-                // pakai phpdbg agar tidak perlu xdebug
                 sh '''
                 set -e
-                phpdbg -qrr vendor/bin/phpunit --coverage-clover coverage.xml || true
+                # Jalankan PHPUnit. Prioritas pakai phpdbg untuk coverage.
+                if command -v phpdbg >/dev/null 2>&1; then
+                    phpdbg -qrr vendor/bin/phpunit --coverage-clover coverage.xml
+                else
+                    echo "phpdbg tidak ada; jalankan phpunit tanpa coverage."
+                    php vendor/bin/phpunit || true
+                    # Buat dummy coverage agar step archive & sonar tidak error
+                    echo '<coverage generated="0"></coverage>' > coverage.xml
+                fi
+
+                # Pastikan file coverage ada
+                [ -f coverage.xml ] || echo '<coverage generated="0"></coverage>' > coverage.xml
                 '''
             }
             post {
