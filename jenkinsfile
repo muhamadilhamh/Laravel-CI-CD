@@ -18,17 +18,20 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                      sonar-scanner \
-                        -Dsonar.projectKey=laravel-app-ci-cd \
-                        -Dsonar.sources=. \
-                        -Dsonar.php.file.suffixes=.php \
-                        -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
-                    '''
+                steps {
+                    withSonarQubeEnv('sonarqube') {
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=laravel-app-ci-cd \
+                            -Dsonar.sources=. \
+                            -Dsonar.php.file.suffixes=.php \
+                            -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
+                        """
+                    }
+                    }
                 }
-            }
         }
 
         stage('Quality Gate') {
