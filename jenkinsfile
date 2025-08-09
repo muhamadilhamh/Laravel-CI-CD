@@ -17,6 +17,20 @@ pipeline {
             }
         }
 
+        stage('PHPUnit & Coverage') {
+            when { expression { fileExists('vendor/bin/phpunit') } }
+            steps {
+                // pakai phpdbg agar tidak perlu xdebug
+                sh '''
+                set -e
+                phpdbg -qrr vendor/bin/phpunit --coverage-clover coverage.xml || true
+                '''
+            }
+            post {
+                always { archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true }
+            }
+        }
+
         stage('SonarQube Analysis') {
                 steps {
                     withSonarQubeEnv('sonarqube') {
