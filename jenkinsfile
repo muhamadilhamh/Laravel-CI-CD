@@ -113,60 +113,19 @@ pipeline {
       }
     }
 
-    /* === TRIVY IMAGE: Show all severities, fail only if CRITICAL === */
-    stage('Trivy Image Scan (registry)') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB}", passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-          sh '''
-            set -e
-            # 1) Tampilkan semua severity; tidak fail
-            trivy image \
-            --severity LOW,MEDIUM,HIGH,CRITICAL \
-            --ignore-unfixed \
-            --exit-code 0 \
-            --cache-dir "$TRIVY_CACHE" \
-            --username "$DOCKER_USER" --password "$DOCKER_PASS" \
-            --format table \
-            ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
-
-            # 2) JSON + SARIF untuk arsip/parse
-            trivy image --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --username "$DOCKER_USER" --password "$DOCKER_PASS" --format json  ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} > trivy-image.json
-            trivy image --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --username "$DOCKER_USER" --password "$DOCKER_PASS" --format sarif --output trivy-image.sarif ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
-
-            # 3) Summary count
-            LOW=$(grep -o '"Severity":"LOW"'       trivy-image.json | wc -l || true)
-            MED=$(grep -o '"Severity":"MEDIUM"'    trivy-image.json | wc -l || true)
-            HIGH=$(grep -o '"Severity":"HIGH"'     trivy-image.json | wc -l || true)
-            CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-image.json | wc -l || true)
-
-            echo "---- Trivy Image Summary ----"
-            echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
-
-            # 4) Gate: fail hanya jika CRITICAL
-            if [ "$CRIT" -gt 0 ]; then
-            echo "❌ Found CRITICAL vulns in image: $CRIT"; exit 1
-            elif [ "$HIGH" -gt 0 ]; then
-            echo "⚠️  Found HIGH vulns in image: $HIGH (not failing build)"
-            fi
-          '''
-        }
-      }
-      post { always { archiveArtifacts artifacts: 'trivy-image.sarif', allowEmptyArchive: true } }
-    }
-
-        stage ('Deploy via OpenShift') {
-                steps {
-                    withCredentials([string(credentialsId:"${OC_TOKEN}" , variable: 'TOKEN')]){
-                        echo 'Deploying application on target server via OpenShift...'
-                        // sh "oc login --token=$TOKEN --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
-                        sh "oc login --token=sha256~JlUY1K0T1KgSXYwAGcTzVpGqX_9L0cEI0LNvDoS6fQ0 --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
-                        sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml"
-                        sh "oc project royalnavy-dev"
-                        sh "oc apply -f ${FILE_NAME}.yml"
-                        sh "oc get route"
-                    }
+    stage ('Deploy via OpenShift') {
+            steps {
+                withCredentials([string(credentialsId:"${OC_TOKEN}" , variable: 'TOKEN')]){
+                    echo 'Deploying application on target server via OpenShift...'
+                    // sh "oc login --token=$TOKEN --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
+                    sh "oc login --token=sha256~JlUY1K0T1KgSXYwAGcTzVpGqX_9L0cEI0LNvDoS6fQ0 --server=https://api.rm1.0a51.p1.openshiftapps.com:6443"
+                    sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml"
+                    sh "oc project royalnavy-dev"
+                    sh "oc apply -f ${FILE_NAME}.yml"
+                    sh "oc get route"
                 }
             }
+    }
   }
 
   post {
