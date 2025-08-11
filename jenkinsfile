@@ -141,8 +141,8 @@ pipeline {
       steps {
         script {
           def clusters = [
-                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_FIRA }", namespace: "${ NS_FIRA }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_HABIB }", namespace: "${ NS_HABIB }"],
+                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_FIRA }", namespace: "${ NS_FIRA }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_ERVINA }", namespace: "${ NS_ERVINA }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_DEVINA }", namespace: "${ NS_DEVINA }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_ZIDANE }", namespace: "${ NS_ZIDANE }"]
