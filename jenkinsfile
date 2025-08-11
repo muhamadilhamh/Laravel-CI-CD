@@ -138,11 +138,25 @@ pipeline {
     //         }
     // }
 
+    stage('Deploy HAProxy in Cluster Habib') {
+      steps {
+        script {
+          withCredentials([string(credentialsId:"${OC_TOKEN_HABIB}" , variable: 'OC_TOKEN')]) {
+            echo 'Deploying HAProxy in Cluster Habib...'
+            sh "oc login --token=$OC_TOKEN --server=${TOKEN_URL}"
+            sh "oc project ${NS_HABIB}"
+            sh "oc apply -f ${FILE_HPX}-config.yml -f ${FILE_HPX}-deployment.yml -f ${FILE_HPX}-service.yml -f ${FILE_HPX}-route.yml"
+            sh 'oc rollout restart deployment/haproxy'
+          }
+        }
+      }
+    }
+
     stage('Deploy to Multiple OpenShift Clusters') {
       steps {
         script {
           def clusters = [
-                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_HABIB }", namespace: "${ NS_HABIB }"],
+                        // [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_HABIB }", namespace: "${ NS_HABIB }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_FIRA }", namespace: "${ NS_FIRA }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_ERVINA }", namespace: "${ NS_ERVINA }"],
                         [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_DEVINA }", namespace: "${ NS_DEVINA }"],
@@ -162,19 +176,6 @@ pipeline {
             }
 
             echo "✅ Success deploy to ${cluster.url}"
-          }
-        }
-      }
-    }
-    stage('Deploy HAProxy in Cluster Habib') {
-      steps {
-        script {
-          withCredentials([string(credentialsId:"${OC_TOKEN_HABIB}" , variable: 'OC_TOKEN')]) {
-            echo 'Deploying HAProxy in Cluster Habib...'
-            sh "oc login --token=$OC_TOKEN --server=${TOKEN_URL}"
-            sh "oc project ${NS_HABIB}"
-            sh "oc apply -f ${FILE_HPX}-config.yml -f ${FILE_HPX}-deployment.yml -f ${FILE_HPX}-service.yml -f ${FILE_HPX}-route.yml"
-            sh 'oc rollout restart deployment/haproxy'
           }
         }
       }
