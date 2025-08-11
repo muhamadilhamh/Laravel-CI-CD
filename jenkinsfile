@@ -7,7 +7,7 @@ pipeline {
     FILE_NAME         = "laravel"
     DOCKER_HUB        = "b2ff3deb-afa2-4d83-9867-cd72fdee776d"  // credsId docker hub
     OC_TOKEN          = "OC_TOKEN"  // credsId ocp token
-    OC_TOKEN_ZIDANE = 	"88f31114-f7e6-4008-9195-d9d9cabd2b05"
+    OC_TOKEN_ZIDANE =     "88f31114-f7e6-4008-9195-d9d9cabd2b05"
     OC_TOKEN_DEVINA = "a35df382-e188-48f2-b2d1-d08408e52105"
     OC_TOKEN_ERVINA = "cc8dc95b-ca16-4ede-9c53-717c2ff2f4a1"
     OC_TOKEN_FIRA = "88b0fc0e-6fea-4029-b0b5-d504c5661d4c"
@@ -137,7 +137,7 @@ pipeline {
     //             }
     //         }
     // }
-    stages {
+    
         stage('Deploy to Multiple OpenShift Clusters') {
             steps {
                 script {
@@ -166,7 +166,7 @@ pipeline {
                 }
             }
         }
-    }
+    
 
   }
 
