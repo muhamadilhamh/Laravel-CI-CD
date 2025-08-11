@@ -146,6 +146,7 @@ pipeline {
             sh "oc login --token=$OC_TOKEN --server=${TOKEN_URL}"
             sh "oc project ${NS_HABIB}"
             sh "oc apply -f ${FILE_HPX}-config.yml -f ${FILE_HPX}-deployment.yml -f ${FILE_HPX}-service.yml -f ${FILE_HPX}-route.yml"
+            sh " oc apply -f ${FILE_NAME}.yml"
             sh 'oc rollout restart deployment/haproxy'
           }
         }
