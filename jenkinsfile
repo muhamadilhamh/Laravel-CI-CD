@@ -154,7 +154,7 @@ pipeline {
             withCredentials([string(credentialsId: cluster.tokenId, variable: cluster.tokenId)]) {
               sh """
                                 set -e
-                                oc login ${cluster.url} --token=${cluster.tokenId}
+                                oc login --token=${cluster.tokenId} --server=${cluster.url}
                                 oc project ${cluster.namespace}
                                 sh "oc apply -f ${FILE_NAME}.yml"
                             """
