@@ -156,7 +156,7 @@ pipeline {
                                 set -e
                                 oc login --token=$OC_TOKEN --server=${cluster.url}
                                 oc project ${cluster.namespace}
-                                sh "oc apply -f ${FILE_NAME}.yml"
+                                oc apply -f ${FILE_NAME}.yml
                             """
             }
 
