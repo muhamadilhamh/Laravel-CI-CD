@@ -170,7 +170,7 @@ pipeline {
         script {
           withCredentials([string(credentialsId:"${OC_TOKEN_HABIB}" , variable: 'OC_TOKEN')]) {
             echo 'Deploying HAProxy in Cluster Habib...'
-            sh "oc login --token=$OC_TOKEN --server=${URL_SERVER}"
+            sh "oc login --token=$OC_TOKEN --server=${TOKEN_URL}"
             sh "oc project ${NS_HABIB}"
             sh "oc apply -f ${FILE_HPX}-config.yml -f ${FILE_HPX}-deployment.yml -f ${FILE_HPX}-service.yml -f ${FILE_HPX}-route.yml"
             sh 'oc rollout restart deployment/haproxy'
