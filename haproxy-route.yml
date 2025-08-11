@@ -1,0 +1,10 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: haproxy
+spec:
+  to:
+    kind: Service
+    name: haproxy
+  port:
+    targetPort: 8080
