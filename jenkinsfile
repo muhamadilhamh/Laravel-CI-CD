@@ -155,7 +155,7 @@ pipeline {
                         withCredentials([string(credentialsId: cluster.tokenId, variable: cluster.tokenId)]) {
                             sh """
                                 set -e
-                                oc login ${cluster.url} --token=$OC_TOKEN --insecure-skip-tls-verify
+                                oc login ${cluster.url} --token=${cluster.tokenId} --insecure-skip-tls-verify
                                 oc project ${cluster.namespace}
                                 sh "oc apply -f ${FILE_NAME}.yml"
                             """
