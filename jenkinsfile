@@ -17,7 +17,7 @@ pipeline {
     NS_ERVINA = "ervinasipahutar-dev"
     NS_FIRA = "syfirawdy-dev"
     NS_ZIDANE = "alfinzirahman-dev"
-    URL = 'https://api.rm1.0a51.p1.openshiftapps.com:6443'
+    TOKEN_URL = 'https://api.rm1.0a51.p1.openshiftapps.com:6443'
   }
 
   stages {
@@ -142,11 +142,11 @@ pipeline {
             steps {
                 script {
                     def clusters = [
-                        [url: "${URL}", tokenId: "${OC_TOKEN_HABIB}", namespace: ${NS_HABIB}],
-                        [url: "${URL}", tokenId: "${OC_TOKEN_FIRA}", namespace: ${NS_FIRA}],
-                        [url: "${URL}", tokenId: "${OC_TOKEN_ERVINA}", namespace: ${NS_ERVINA}],
-                        [url: "${URL}", tokenId: "${OC_TOKEN_DEVINA}", namespace: ${NS_DEVINA}],
-                        [url: "${URL}", tokenId: "${OC_TOKEN_ZIDANE}", namespace: ${NS_ZIDANE}]
+                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_HABIB}", namespace: ${NS_HABIB}],
+                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_FIRA}", namespace: ${NS_FIRA}],
+                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_ERVINA}", namespace: ${NS_ERVINA}],
+                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_DEVINA}", namespace: ${NS_DEVINA}],
+                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_ZIDANE}", namespace: ${NS_ZIDANE}]
                     ]
 
                     for (cluster in clusters) {
