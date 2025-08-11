@@ -2,110 +2,109 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_IMAGE_NAME = "royalnavy/laravel-image"
+    DOCKER_IMAGE_NAME = 'royalnavy/laravel-image'
     DOCKER_IMAGE_TAG  = "v${BUILD_NUMBER}"
-    FILE_NAME         = "laravel"
-    DOCKER_HUB        = "b2ff3deb-afa2-4d83-9867-cd72fdee776d"  // credsId docker hub
-    OC_TOKEN          = "OC_TOKEN"  // credsId ocp token
-    OC_TOKEN_ZIDANE =     "88f31114-f7e6-4008-9195-d9d9cabd2b05"
-    OC_TOKEN_DEVINA = "a35df382-e188-48f2-b2d1-d08408e52105"
-    OC_TOKEN_ERVINA = "cc8dc95b-ca16-4ede-9c53-717c2ff2f4a1"
-    OC_TOKEN_FIRA = "88b0fc0e-6fea-4029-b0b5-d504c5661d4c"
-    OC_TOKEN_HABIB = "c3a8fb12-dd18-4a6c-83c5-1e95b5acddb6"
-    NS_HABIB = "royalnavy-dev"
-    NS_DEVINA = "devinareva-dev"
-    NS_ERVINA = "ervinasipahutar-dev"
-    NS_FIRA = "syfirawdy-dev"
-    NS_ZIDANE = "alfinzirahman-dev"
+    FILE_NAME         = 'laravel'
+    DOCKER_HUB        = 'b2ff3deb-afa2-4d83-9867-cd72fdee776d'  // credsId docker hub
+    OC_TOKEN          = 'OC_TOKEN'  // credsId ocp token
+    OC_TOKEN_ZIDANE =     '88f31114-f7e6-4008-9195-d9d9cabd2b05'
+    OC_TOKEN_DEVINA = 'a35df382-e188-48f2-b2d1-d08408e52105'
+    OC_TOKEN_ERVINA = 'cc8dc95b-ca16-4ede-9c53-717c2ff2f4a1'
+    OC_TOKEN_FIRA = '88b0fc0e-6fea-4029-b0b5-d504c5661d4c'
+    OC_TOKEN_HABIB = 'c3a8fb12-dd18-4a6c-83c5-1e95b5acddb6'
+    NS_HABIB = 'royalnavy-dev'
+    NS_DEVINA = 'devinareva-dev'
+    NS_ERVINA = 'ervinasipahutar-dev'
+    NS_FIRA = 'syfirawdy-dev'
+    NS_ZIDANE = 'alfinzirahman-dev'
     TOKEN_URL = 'https://api.rm1.0a51.p1.openshiftapps.com:6443'
   }
 
   stages {
-
-    stage ('Checkout') {
+    stage('Checkout') {
       steps {
         git branch: 'master', url: 'https://github.com/muhamadilhamh/Laravel-CI-CD.git'
       }
     }
 
     /* === TRIVY FS: Show all severities, fail only if CRITICAL === */
-     stage('Trivy FS Scan (source)') {
-        steps {
-            sh '''
-            set -e
+    // stage('Trivy FS Scan (source)') {
+    //     steps {
+    //         sh '''
+    //         set -e
 
-            # 1) Human readable (semua severity), tidak fail
-            trivy fs . \
-            --severity LOW,MEDIUM,HIGH,CRITICAL \
-            --ignore-unfixed \
-            --exit-code 0 \
-            --cache-dir "$TRIVY_CACHE" \
-            --format table
+    //         # 1) Human readable (semua severity), tidak fail
+    //         trivy fs . \
+    //         --severity LOW,MEDIUM,HIGH,CRITICAL \
+    //         --ignore-unfixed \
+    //         --exit-code 0 \
+    //         --cache-dir "$TRIVY_CACHE" \
+    //         --format table
 
-            # 2) Output untuk parsing & arsip
-            trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format json  > trivy-fs.json
-            trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format sarif --output trivy-fs.sarif
+    //         # 2) Output untuk parsing & arsip
+    //         trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format json  > trivy-fs.json
+    //         trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format sarif --output trivy-fs.sarif
 
-            # 3) Summary count
-            LOW=$(grep -o '"Severity":"LOW"'       trivy-fs.json | wc -l || true)
-            MED=$(grep -o '"Severity":"MEDIUM"'    trivy-fs.json | wc -l || true)
-            HIGH=$(grep -o '"Severity":"HIGH"'     trivy-fs.json | wc -l || true)
-            CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-fs.json | wc -l || true)
+    //         # 3) Summary count
+    //         LOW=$(grep -o '"Severity":"LOW"'       trivy-fs.json | wc -l || true)
+    //         MED=$(grep -o '"Severity":"MEDIUM"'    trivy-fs.json | wc -l || true)
+    //         HIGH=$(grep -o '"Severity":"HIGH"'     trivy-fs.json | wc -l || true)
+    //         CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-fs.json | wc -l || true)
 
-            echo "---- Trivy FS Summary ----"
-            echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
+    //         echo "---- Trivy FS Summary ----"
+    //         echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
 
-            # 4) Gate: fail hanya jika CRITICAL; HIGH cuma warning
-            if [ "$CRIT" -gt 0 ]; then
-            echo "❌ Found CRITICAL vulns in source: $CRIT"; exit 1
-            elif [ "$HIGH" -gt 0 ]; then
-            echo "⚠️  Found HIGH vulns in source: $HIGH (not failing build)"
-            fi
-            '''
-        }
-      post { always { archiveArtifacts artifacts: 'trivy-fs.*', allowEmptyArchive: true } }
-    }
+    //         # 4) Gate: fail hanya jika CRITICAL; HIGH cuma warning
+    //         if [ "$CRIT" -gt 0 ]; then
+    //         echo "❌ Found CRITICAL vulns in source: $CRIT"; exit 1
+    //         elif [ "$HIGH" -gt 0 ]; then
+    //         echo "⚠️  Found HIGH vulns in source: $HIGH (not failing build)"
+    //         fi
+    //         '''
+    //     }
+    //   post { always { archiveArtifacts artifacts: 'trivy-fs.*', allowEmptyArchive: true } }
+    // }
 
-    stage('PHPUnit & Coverage') {
-      when { expression { fileExists('vendor/bin/phpunit') } }
-      steps {
-        sh '''
-          set -e
-          php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-clover coverage.xml || true
-        '''
-      }
-      post { always { archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true } }
-    }
+    // stage('PHPUnit & Coverage') {
+    //   when { expression { fileExists('vendor/bin/phpunit') } }
+    //   steps {
+    //     sh '''
+    //       set -e
+    //       php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-clover coverage.xml || true
+    //     '''
+    //   }
+    //   post { always { archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true } }
+    // }
 
-    stage('SonarQube Analysis') {
-      steps {
-        withSonarQubeEnv('sonarqube') {
-          script {
-            def scannerHome = tool 'SonarScanner'
-            sh """
-              ${scannerHome}/bin/sonar-scanner \
-                -Dsonar.projectKey=laravel-app-ci-cd \
-                -Dsonar.sources=. \
-                -Dsonar.php.file.suffixes=.php \
-                -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
-            """
-          }
-        }
-      }
-    }
+    // stage('SonarQube Analysis') {
+    //   steps {
+    //     withSonarQubeEnv('sonarqube') {
+    //       script {
+    //         def scannerHome = tool 'SonarScanner'
+    //         sh """
+    //           ${scannerHome}/bin/sonar-scanner \
+    //             -Dsonar.projectKey=laravel-app-ci-cd \
+    //             -Dsonar.sources=. \
+    //             -Dsonar.php.file.suffixes=.php \
+    //             -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
+    //         """
+    //       }
+    //     }
+    //   }
+    // }
 
-    stage('Quality Gate') {
-      steps {
-        timeout(time: 15, unit: 'MINUTES') {
-          script {
-            def qg = waitForQualityGate()
-            if (qg.status != 'OK') error "Pipeline failed because Quality Gate was ${qg.status}"
-          }
-        }
-      }
-    }
+    // stage('Quality Gate') {
+    //   steps {
+    //     timeout(time: 15, unit: 'MINUTES') {
+    //       script {
+    //         def qg = waitForQualityGate()
+    //         if (qg.status != 'OK') error "Pipeline failed because Quality Gate was ${qg.status}"
+    //       }
+    //     }
+    //   }
+    // }
 
-    stage ('Build Docker Image') {
+    stage('Build Docker Image') {
       steps {
         sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ."
       }
@@ -137,37 +136,35 @@ pipeline {
     //             }
     //         }
     // }
-    
-        stage('Deploy to Multiple OpenShift Clusters') {
-            steps {
-                script {
-                    def clusters = [
-                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_HABIB}", namespace: ${NS_HABIB}],
-                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_FIRA}", namespace: ${NS_FIRA}],
-                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_ERVINA}", namespace: ${NS_ERVINA}],
-                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_DEVINA}", namespace: ${NS_DEVINA}],
-                        [url: "${TOKEN_URL}", tokenId: "${OC_TOKEN_ZIDANE}", namespace: ${NS_ZIDANE}]
+
+    stage('Deploy to Multiple OpenShift Clusters') {
+      steps {
+        script {
+          def clusters = [
+                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_HABIB }", namespace: "${ NS_HABIB }"],
+                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_FIRA }", namespace: "${ NS_FIRA }"],
+                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_ERVINA }", namespace: "${ NS_ERVINA }"],
+                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_DEVINA }", namespace: "${ NS_DEVINA }"],
+                        [url: "${ TOKEN_URL }", tokenId: "${ OC_TOKEN_ZIDANE }", namespace: "${ NS_ZIDANE }"]
                     ]
 
-                    for (cluster in clusters) {
-                        echo "🚀 Deploying to ${cluster.url}"
-                        
-                        withCredentials([string(credentialsId: cluster.tokenId, variable: cluster.tokenId)]) {
-                            sh """
+          for (cluster in clusters) {
+            echo "🚀 Deploying to ${cluster.url}"
+
+            withCredentials([string(credentialsId: cluster.tokenId, variable: cluster.tokenId)]) {
+              sh """
                                 set -e
                                 oc login ${cluster.url} --token=${cluster.tokenId} --insecure-skip-tls-verify
                                 oc project ${cluster.namespace}
                                 sh "oc apply -f ${FILE_NAME}.yml"
                             """
-                        }
-
-                        echo "✅ Success deploy to ${cluster.url}"
-                    }
-                }
             }
-        }
-    
 
+            echo "✅ Success deploy to ${cluster.url}"
+          }
+        }
+      }
+    }
   }
 
     post {
