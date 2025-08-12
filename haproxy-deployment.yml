@@ -13,16 +13,15 @@ spec:
         app: haproxy
     spec:
       containers:
-        - name: haproxy
-          image: bitnami/haproxy:latest
-          ports:
-            - containerPort: 8080
-          volumeMounts:
-            - name: haproxy-config-volume
-              mountPath: /opt/bitnami/haproxy/conf/haproxy.cfg
-              # mountPath: /bitnami/haproxy/conf/haproxy.cfg
-              subPath: haproxy.cfg
-      volumes:
+      - name: haproxy
+        image: bitnami/haproxy:latest
+        ports:
+        - containerPort: 8080
+        volumeMounts:
         - name: haproxy-config-volume
-          configMap:
-            name: haproxy-config
+          mountPath: /bitnami/haproxy/conf/haproxy.cfg
+          subPath: haproxy.cfg
+      volumes:
+      - name: haproxy-config-volume
+        configMap:
+          name: haproxy-config

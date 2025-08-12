@@ -5,10 +5,12 @@ metadata:
 data:
   haproxy.cfg: |
     global
-        log stdout format raw local0
+        log stdout format raw local0 debug
 
     defaults
+        log global
         mode http
+        option httplog
         timeout connect 5s
         timeout client  50s
         timeout server  50s
@@ -18,14 +20,9 @@ data:
         default_backend web_backends
 
     backend web_backends
-        balance roundrobin
-        option httpchk GET /
-        server hb1 laravel-royalnavy-dev.apps.rm1.0a51.p1.openshiftapps.com:80 resolvers mydns check
-        server hb2 laravel-syfirawdy-dev.apps.rm1.0a51.p1.openshiftapps.com:80 resolvers mydns check
-        server hb4 laravel-ervinasipahutar-dev.apps.rm1.0a51.p1.openshiftapps.com:80 resolvers mydns check
-        server hb3 laravel-devinareva-dev.apps.rm1.0a51.p1.openshiftapps.com:80 resolvers mydns check
-        server hb5 laravel-alfinzirahman-dev.apps.rm1.0a51.p1.openshiftapps.com:80 resolvers mydns check
-
-    resolvers mydns
-      nameserver dns1 8.8.8.8:53
-      hold valid 10s
+        # server httpbin httpbin.org:80
+        server hb1 laravel-royalnavy-dev.apps.rm1.0a51.p1.openshiftapps.com:80 
+        server hb2 laravel-syfirawdy-dev.apps.rm1.0a51.p1.openshiftapps.com:80 
+        server hb3 laravel-devinareva-dev.apps.rm1.0a51.p1.openshiftapps.com:80 
+        server hb4 laravel-ervinasipahutar-dev.apps.rm1.0a51.p1.openshiftapps.com:80 
+        server hb5 laravel-alfinzirahman-dev.apps.rm1.0a51.p1.openshiftapps.com:80
