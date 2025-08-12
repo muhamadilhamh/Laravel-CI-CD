@@ -19,7 +19,8 @@ spec:
             - containerPort: 8080
           volumeMounts:
             - name: haproxy-config-volume
-              mountPath: /bitnami/haproxy/conf/haproxy.cfg
+              mountPath: /opt/bitnami/haproxy/conf/haproxy.cfg
+              # mountPath: /bitnami/haproxy/conf/haproxy.cfg
               subPath: haproxy.cfg
       volumes:
         - name: haproxy-config-volume
