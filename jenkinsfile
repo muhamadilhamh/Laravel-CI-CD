@@ -144,6 +144,7 @@ pipeline {
           withCredentials([string(credentialsId:"${OC_TOKEN_HABIB}" , variable: 'OC_TOKEN')]) {
             echo 'Deploying HAProxy in Cluster Habib...'
             sh "oc login --token=$OC_TOKEN --server=${TOKEN_URL}"
+            sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml"
             sh "oc project ${NS_HABIB}"
             sh "oc apply -f ${FILE_HPX}-config.yml -f ${FILE_HPX}-deployment.yml -f ${FILE_HPX}-service.yml -f ${FILE_HPX}-route.yml"
             sh " oc apply -f ${FILE_NAME}.yml"
@@ -171,6 +172,7 @@ pipeline {
               sh """
                                 set -e
                                 oc login --token=$OC_TOKEN --server=${cluster.url}
+                                oc "sed -i 's|image: .*|image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}|g' ${FILE_NAME}.yml"
                                 oc project ${cluster.namespace}
                                 oc apply -f ${FILE_NAME}.yml
                             """

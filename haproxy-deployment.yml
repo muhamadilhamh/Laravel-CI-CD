@@ -16,7 +16,7 @@ spec:
         - name: haproxy
           image: bitnami/haproxy:latest
           ports:
-            - containerPort: 8000
+            - containerPort: 8080
           volumeMounts:
             - name: haproxy-config-volume
               mountPath: /opt/bitnami/haproxy/conf/haproxy.cfg
