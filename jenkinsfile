@@ -29,81 +29,81 @@ pipeline {
     }
 
     /* === TRIVY FS: Show all severities, fail only if CRITICAL === */
-    // stage('Trivy FS Scan (source)') {
-    //     steps {
-    //         sh '''
-    //         set -e
+    stage('Trivy FS Scan (source)') {
+        steps {
+            sh '''
+            set -e
 
-    //         # 1) Human readable (semua severity), tidak fail
-    //         trivy fs . \
-    //         --severity LOW,MEDIUM,HIGH,CRITICAL \
-    //         --ignore-unfixed \
-    //         --exit-code 0 \
-    //         --cache-dir "$TRIVY_CACHE" \
-    //         --format table
+            # 1) Human readable (semua severity), tidak fail
+            trivy fs . \
+            --severity LOW,MEDIUM,HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 0 \
+            --cache-dir "$TRIVY_CACHE" \
+            --format table
 
-    //         # 2) Output untuk parsing & arsip
-    //         trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format json  > trivy-fs.json
-    //         trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format sarif --output trivy-fs.sarif
+            # 2) Output untuk parsing & arsip
+            trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format json  > trivy-fs.json
+            trivy fs . --severity LOW,MEDIUM,HIGH,CRITICAL --ignore-unfixed --exit-code 0 --cache-dir "$TRIVY_CACHE" --format sarif --output trivy-fs.sarif
 
-    //         # 3) Summary count
-    //         LOW=$(grep -o '"Severity":"LOW"'       trivy-fs.json | wc -l || true)
-    //         MED=$(grep -o '"Severity":"MEDIUM"'    trivy-fs.json | wc -l || true)
-    //         HIGH=$(grep -o '"Severity":"HIGH"'     trivy-fs.json | wc -l || true)
-    //         CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-fs.json | wc -l || true)
+            # 3) Summary count
+            LOW=$(grep -o '"Severity":"LOW"'       trivy-fs.json | wc -l || true)
+            MED=$(grep -o '"Severity":"MEDIUM"'    trivy-fs.json | wc -l || true)
+            HIGH=$(grep -o '"Severity":"HIGH"'     trivy-fs.json | wc -l || true)
+            CRIT=$(grep -o '"Severity":"CRITICAL"' trivy-fs.json | wc -l || true)
 
-    //         echo "---- Trivy FS Summary ----"
-    //         echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
+            echo "---- Trivy FS Summary ----"
+            echo "LOW=$LOW  MEDIUM=$MED  HIGH=$HIGH  CRITICAL=$CRIT"
 
-    //         # 4) Gate: fail hanya jika CRITICAL; HIGH cuma warning
-    //         if [ "$CRIT" -gt 0 ]; then
-    //         echo "❌ Found CRITICAL vulns in source: $CRIT"; exit 1
-    //         elif [ "$HIGH" -gt 0 ]; then
-    //         echo "⚠️  Found HIGH vulns in source: $HIGH (not failing build)"
-    //         fi
-    //         '''
-    //     }
-    //   post { always { archiveArtifacts artifacts: 'trivy-fs.*', allowEmptyArchive: true } }
-    // }
+            # 4) Gate: fail hanya jika CRITICAL; HIGH cuma warning
+            if [ "$CRIT" -gt 0 ]; then
+            echo "❌ Found CRITICAL vulns in source: $CRIT"; exit 1
+            elif [ "$HIGH" -gt 0 ]; then
+            echo "⚠️  Found HIGH vulns in source: $HIGH (not failing build)"
+            fi
+            '''
+        }
+      post { always { archiveArtifacts artifacts: 'trivy-fs.*', allowEmptyArchive: true } }
+    }
 
-    // stage('PHPUnit & Coverage') {
-    //   when { expression { fileExists('vendor/bin/phpunit') } }
-    //   steps {
-    //     sh '''
-    //       set -e
-    //       php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-clover coverage.xml || true
-    //     '''
-    //   }
-    //   post { always { archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true } }
-    // }
+    stage('PHPUnit & Coverage') {
+      when { expression { fileExists('vendor/bin/phpunit') } }
+      steps {
+        sh '''
+          set -e
+          php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-clover coverage.xml || true
+        '''
+      }
+      post { always { archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true } }
+    }
 
-    // stage('SonarQube Analysis') {
-    //   steps {
-    //     withSonarQubeEnv('sonarqube') {
-    //       script {
-    //         def scannerHome = tool 'SonarScanner'
-    //         sh """
-    //           ${scannerHome}/bin/sonar-scanner \
-    //             -Dsonar.projectKey=laravel-app-ci-cd \
-    //             -Dsonar.sources=. \
-    //             -Dsonar.php.file.suffixes=.php \
-    //             -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
-    //         """
-    //       }
-    //     }
-    //   }
-    // }
+    stage('SonarQube Analysis') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          script {
+            def scannerHome = tool 'SonarScanner'
+            sh """
+              ${scannerHome}/bin/sonar-scanner \
+                -Dsonar.projectKey=laravel-app-ci-cd \
+                -Dsonar.sources=. \
+                -Dsonar.php.file.suffixes=.php \
+                -Dsonar.exclusions=**/vendor/**,**/node_modules/**,**/storage/**,**/public/**
+            """
+          }
+        }
+      }
+    }
 
-    // stage('Quality Gate') {
-    //   steps {
-    //     timeout(time: 15, unit: 'MINUTES') {
-    //       script {
-    //         def qg = waitForQualityGate()
-    //         if (qg.status != 'OK') error "Pipeline failed because Quality Gate was ${qg.status}"
-    //       }
-    //     }
-    //   }
-    // }
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 15, unit: 'MINUTES') {
+          script {
+            def qg = waitForQualityGate()
+            if (qg.status != 'OK') error "Pipeline failed because Quality Gate was ${qg.status}"
+          }
+        }
+      }
+    }
 
     stage('Build Docker Image') {
       steps {
